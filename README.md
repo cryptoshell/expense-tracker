@@ -14,7 +14,7 @@ Follow these instructions to get the project up and running on your local machin
 * [Node.js](https://nodejs.org/en/) 12.14.1+
 * [Redux.js](https://redux.js.org/) 4.0.5+
 
-### Installing
+### Download
 
 Clone this repo:
 
