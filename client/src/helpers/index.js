@@ -3,26 +3,32 @@ import { format } from 'date-fns';
 const formatDate = date => {
   let formattedDate = date;
   if (date) {
-    const timestamp = "iii, MMM d, yyyy 'at' HH:mm";
+    const timestamp = "M/d/yyyy 'at' HH:mm";
     formattedDate = format(new Date(date), timestamp);
   }
   return formattedDate;
 };
 
 const formatTaxes = (amount, percent) => {
-  let tax = 0;
+  let taxAmount = 0;
   if (amount && percent) {
-    tax = (amount * percent / 100);
+    taxAmount = (amount * percent / 100);
   }
-  return tax.toFixed(2);
+  return formatCurrency(taxAmount);
 };
 
 const formatCurrency = amount => {
-  let formatted = amount;
+  let formattedAmount = amount;
   if (amount) {
-    formatted = amount.toFixed(2);
+    formattedAmount = amount.toLocaleString(
+      undefined,
+      {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      },
+    );
   }
-  return formatted;
+  return formattedAmount;
 };
 
 export {
