@@ -55,6 +55,6 @@ $ yarn start
 !["New expense added"](/docs/screenshots/create-expense.png "New expense added")
 !["Sort columns"](/docs/screenshots/sort.png "Sort expenses")
 !["Edit rows"](/docs/screenshots/edit-expense.png "Edit an expense")
-!["Confirm deletion"](/docs/screenshots/delete-confirm.png "Delete expense confirmation")
+!["Confirm deletion"](/docs/screenshots/delete-confirmation.png "Delete expense confirmation")
 !["Deleted expense"](/docs/screenshots/delete.png "Expense deleted")
 !["Dashboard coming soon"](/docs/screenshots/dashboard-coming-soon.png "Dashboard preview")
