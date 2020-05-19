@@ -1,5 +1,7 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import styled from 'styled-components';
+import { formatCurrency } from '../helpers';
 
 const Wrapper = styled.div`
   color: grey;
@@ -21,10 +23,14 @@ const Details = props => {
 
   return (
     <Wrapper>
-      <div>Subtotal: {getSubtotal()} $</div>
-      <div>Total (incl. tax): {getTotal()} $</div>
+      <div>Subtotal: {formatCurrency(getSubtotal())} $</div>
+      <div>Total (incl. tax): {formatCurrency(getTotal())} $</div>
     </Wrapper>
   );
 }
 
-export default Details;
+const mapStateToProps = ({ expenses }) => {
+  return { expenses };
+};
+
+export default connect(mapStateToProps)(Details);

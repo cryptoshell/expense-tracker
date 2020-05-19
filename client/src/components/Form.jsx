@@ -1,19 +1,32 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { toggleForm, refreshTable, fireMessage } from '../actions';
 import { createExpense } from '../api';
 import styled from 'styled-components';
-import { Calendar } from '../components';
+import Calendar from 'react-datetime-picker';
 import { formatTaxes } from '../helpers';
+
+const Wrapper = styled.div`
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.4);
+`;
+
+const Card = styled.div.attrs({
+  className: 'card',
+})`
+  padding: 20px;
+  margin: 20vh 20px;
+`;
 
 const Title = styled.h1.attrs({
   className: 'h2',
 })``;
-
-const Wrapper = styled.div.attrs({
-  className: 'card',
-})`
-  margin: 20px 0;
-  padding: 20px;
-`;
 
 const Label = styled.label`
   margin: 5px;
@@ -52,23 +65,32 @@ class Form extends Component {
   };
 
   createExpense = async () => {
-    const { hideForm, refreshTable } = this.props;
+    const { toggleForm, refreshTable, fireMessage } = this.props;
+    const { description } = this.state;
     const payload = { ...this.state };
 
     await createExpense(payload).then(res => {
-      window.alert(`Expense created successfully`);
-      hideForm();
+      const { status } = res;
+
+      const msg =
+        status === 201
+          ? `Expense "${description}" was created successfully!`
+          : 'There was an issue creating the expense.';
+      fireMessage(msg);
+      setTimeout(() => fireMessage(''), 3000);
+
+      toggleForm(false);
       refreshTable();
     });
   }
 
   render() {
     const { description, amount, date } = this.state;
-    const { hideForm } = this.props;
+    const { toggleForm } = this.props;
 
     return (
       <Wrapper>
-        <div className="card-body form-group">
+        <Card>
           <Title>Create Expense</Title>
           <Label>Description*: </Label>
           <InputText
@@ -92,15 +114,26 @@ class Form extends Component {
             </div>
           )}
           <Label>Expense date*: </Label>
-          <Calendar date={date} changeDate={this.changeDate} />
+          <Calendar value={date} onChange={this.changeDate} />
           <div>
-            <CreateButton onClick={this.createExpense}>Add Expense</CreateButton>
-            <CancelButton onClick={hideForm}>Cancel</CancelButton>
+            <CreateButton onClick={this.createExpense}>Save</CreateButton>
+            <CancelButton onClick={() => toggleForm(false)}>Cancel</CancelButton>
           </div>
-        </div>
+        </Card>
       </Wrapper>
     );
   }
 };
 
-export default Form;
+function mapDispatchToProps(dispatch) {
+  return {
+    toggleForm: bool => dispatch(toggleForm(bool)),
+    refreshTable: () => dispatch(refreshTable()),
+    fireMessage: message => dispatch(fireMessage(message)),
+  };
+};
+
+export default connect(
+  null,
+  mapDispatchToProps
+)(Form);

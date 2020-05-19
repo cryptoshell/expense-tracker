@@ -1,11 +1,18 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { refreshTable, fireMessage } from '../actions';
 import ReactTable from 'react-table-6';
+import Calendar from 'react-datetime-picker';
 import { deleteExpenseById, updateExpenseById } from '../api';
-import 'react-table-6/react-table.css';
 import styled from 'styled-components';
-import { Calendar } from '.';
 import { formatDate, formatTaxes, formatCurrency } from '../helpers';
 
+const Wrapper = styled.div`
+  .react-datetime-picker__calendar--open,
+  .react-datetime-picker__clock--open {
+    display: none;
+  }
+`;
 
 const Input = styled.div.attrs({
   className: 'form-control',
@@ -37,22 +44,6 @@ const CancelButton = styled.button.attrs({
   margin: 0 5px;
 `;
 
-const DeleteExpense = props => {
-  const { id, refreshTable } = props;
-  const handleDelete = event => {
-    event.preventDefault();
-    if (
-      window.confirm(
-        `Do you want to delete this expense permanently?`,
-      )
-    ) {
-      deleteExpenseById(id);
-      refreshTable();
-    }
-  }
-  return <DeleteButton onClick={handleDelete}>Delete</DeleteButton>;
-};
-
 class Table extends Component {
   state = {
     editableId: '',
@@ -76,24 +67,51 @@ class Table extends Component {
   cancelEditableRow = () => this.setState({ editableId: '' });
 
   updateExpense = async () => {
-    const { refreshTable } = this.props;
+    const { refreshTable, fireMessage } = this.props;
     const { editableId, description, amount, date } = this.state;
     const payload = { description, amount, date };
 
     await updateExpenseById(editableId, payload).then(res => {
-      window.alert(`Expense was updated successfully!`);
+      const { status } = res;
+
+      const msg = status === 200
+        ? `Expense "${description}" was updated successfully!`
+        : 'There was an issue updating the expense.';
+      fireMessage(msg);
+      setTimeout(() => fireMessage(''), 3000);
+
       this.setState({
         editableId: '',
         description: '',
         amount: '',
         date: '',
       });
+
       refreshTable();
     });
   };
 
+  handleDelete = async id => {
+    const { refreshTable, fireMessage } = this.props;
+    const confirmed = window.confirm('Do you want to delete this expense permanently?');
+
+    if (confirmed) {
+      await deleteExpenseById(id).then(res => {
+        const { status } = res;
+
+        const msg = status === 200
+          ? 'Expense was deleted!'
+          : 'There was an issue deleting the expense.';
+        fireMessage(msg);
+        setTimeout(() => fireMessage(''), 3000);
+
+        refreshTable();
+      });
+    }
+  };
+
   render() {
-    const { expenses, isLoading, refreshTable } = this.props;
+    const { expenses, isLoading } = this.props;
     const { sortOptions, editableId, description, amount, date } = this.state;
 
     const columns = [
@@ -135,7 +153,7 @@ class Table extends Component {
       },
       {
         id: 'taxes',
-        Header: 'Taxes (15%)',
+        Header: '15% Tax ($)',
         Cell: props => {
           const { _id, amount: originalAmount } = props.original;
           if (editableId === _id) {
@@ -146,14 +164,16 @@ class Table extends Component {
       },
       {
         id: 'expense-date',
-        Header: 'Expensed at',
+        Header: 'Expensed At',
         Cell: props => {
           const { _id, date: originalDate } = props.original;
           if (editableId === _id) {
             return (
               <Calendar
-                value={date}
+                value={new Date(date)}
                 onChange={val => this.changeInput('date', val)}
+                calendarIcon={null}
+                clearIcon={null}
               />
             );
           }
@@ -162,7 +182,7 @@ class Table extends Component {
       },
       {
         id: 'updated-at',
-        Header: 'Updated at',
+        Header: 'Updated At',
         Cell: props => (formatDate(props.original.updatedAt)),
       },
       {
@@ -181,7 +201,7 @@ class Table extends Component {
           return (
             <>
               <EditButton onClick={() => this.makeEditable(original)}>Edit</EditButton>
-              <DeleteExpense id={_id} refreshTable={refreshTable} />
+              <DeleteButton onClick={() => this.handleDelete(_id)}>Delete</DeleteButton>
             </>
           );
         },
@@ -189,20 +209,36 @@ class Table extends Component {
     ];
 
     return (
-      <ReactTable
-        data={expenses}
-        columns={columns}
-        loading={isLoading}
-        defaultPageSize={10}
-        showPageSizeOptions={true}
-        minRows={0}
-        sorted={sortOptions}
-        onSortedChange={val => {
-          this.setState({ sortOptions: val });
-        }}
-      />
+      <Wrapper>
+        <ReactTable
+          data={expenses}
+          columns={columns}
+          loading={isLoading}
+          defaultPageSize={10}
+          showPageSizeOptions={true}
+          minRows={0}
+          sorted={sortOptions}
+          onSortedChange={val => {
+            this.setState({ sortOptions: val });
+          }}
+        />
+      </Wrapper>
     );
   }
 }
 
-export default Table;
+function mapDispatchToProps(dispatch) {
+  return {
+    refreshTable: () => dispatch(refreshTable()),
+    fireMessage: message => dispatch(fireMessage(message)),
+  };
+};
+
+const mapStateToProps = ({ isLoading, expenses }) => {
+  return { isLoading, expenses };
+};
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(Table);

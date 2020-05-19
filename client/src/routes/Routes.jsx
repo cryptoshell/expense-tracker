@@ -1,6 +1,6 @@
 import React from 'react';
 import { Route, Switch } from 'react-router-dom';
-import { Expenses, Dashboard } from '../pages'
+import { Expenses, Dashboard } from '../pages';
 
 const Routes = () => (
   <Switch>

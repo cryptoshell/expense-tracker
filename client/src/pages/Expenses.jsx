@@ -1,7 +1,10 @@
 import React, { Component } from 'react';
-import { getAllExpenses } from '../api';
+import { connect } from 'react-redux';
+import { toggleForm, refreshTable } from '../actions';
 import { Empty, Table, Form, Details } from '../components';
 import styled from 'styled-components';
+import 'react-calendar/dist/Calendar.css';
+import 'react-table-6/react-table.css';
 // TODO: Add PropTypes
 
 const Wrapper = styled.div`
@@ -11,74 +14,86 @@ const Wrapper = styled.div`
 const Title = styled.h1.attrs({
   className: 'h1',
 })`
-  margin: 20px 0;
+  margin: 10px 0;
 `;
 
 const FlexBox = styled.div`
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  padding-bottom: 20px;
+  padding: 10px 0 20px;
 `;
 
 const AddButton = styled.button.attrs({
   className: `btn btn-primary`,
 })``;
 
+const Alert = styled.div.attrs({
+  className: 'alert alert-info',
+})`
+  position: fixed;
+  bottom: 40px;
+  left: 0;
+  right: 0;
+  width: 500px;
+  margin: auto;
+  text-align: center;
+`;
+
 class Expenses extends Component {
-  state = {
-    expenses: [],
-    isLoading: false,
-    showForm: false,
-  };
-  
-  refreshTable = async () => {
-    await getAllExpenses().then(expenses => {
-      const { data: { data: list }} = expenses;
-      this.setState({
-        expenses: list,
-        isLoading: false,
-      });
-    });
-  }
-
-  showForm = () => this.setState({ showForm: true });
-  hideForm = () => this.setState({ showForm: false });
-
   componentDidMount = () => {
-    this.setState({ isLoading: true });
-    this.refreshTable();
-  }
+    const { refreshTable } = this.props;
+    refreshTable();
+  };
 
   render() {
-    const { expenses, isLoading, showForm } = this.state;
+    const {
+      expenses,
+      showForm,
+      toggleForm,
+      message,
+    } = this.props;
 
     return (
       <Wrapper>
         <Title>Expense Tracker</Title>
-        {!expenses.length && <Empty showForm={this.showForm} />}
+        {!expenses.length && <Empty />}
         {expenses.length > 0 && (
           <>
-           <FlexBox>
-              <Details expenses={expenses} />
-              <AddButton onClick={this.showForm}>+ new expense</AddButton>
+            <FlexBox>
+              <Details />
+              <AddButton onClick={() => toggleForm(!showForm)}>+ expense</AddButton>
             </FlexBox>
-            <Table
-              expenses={expenses}
-              isLoading={isLoading}
-              refreshTable={this.refreshTable}
-            />
+            <Table />
           </>
         )}
-        {showForm && (
-          <Form
-            hideForm={this.hideForm}
-            refreshTable={this.refreshTable}
-          />
-        )}
+        {showForm && <Form />}
+        {message && <Alert>{message}</Alert>}
       </Wrapper>
     );
+  }
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    toggleForm: bool => dispatch(toggleForm(bool)),
+    refreshTable: () => dispatch(refreshTable()),
   };
 };
 
-export default Expenses;
+const mapStateToProps = ({
+  showForm,
+  expenses,
+  message,
+}) => {
+  return {
+    showForm,
+    expenses,
+    message,
+  };
+};
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Expenses);
